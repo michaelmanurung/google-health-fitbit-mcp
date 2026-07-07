@@ -1,6 +1,6 @@
 {
   "name": "google-health-fitbit-mcp",
-  "version": "0.6.0",
+  "version": "1.0.0",
   "description": "Google Health API v4 MCP server for AI health, sleep and activity agents — reads Fitbit, Pixel Watch and partner data locally over OAuth.",
   "type": "module",
   "bin": {
