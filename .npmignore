@@ -1,0 +1,2 @@
+# Local deployment metadata must never ship in npm packages.
+.vercel/

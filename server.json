@@ -1,0 +1,79 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.BerkKilicoglu/google-health-fitbit-mcp",
+  "description": "Privacy-first unofficial Google Health API v4 MCP server for health, sleep, activity, HR agents",
+  "repository": {
+    "url": "https://github.com/BerkKilicoglu/google-health-fitbit-mcp",
+    "source": "github"
+  },
+  "version": "0.6.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "google-health-fitbit-mcp",
+      "version": "0.6.0",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "GOOGLE_HEALTH_CLIENT_ID",
+          "description": "Google Cloud OAuth client ID for Google Health API. Optional when configured with google-health-fitbit-mcp-server setup.",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": false
+        },
+        {
+          "name": "GOOGLE_HEALTH_CLIENT_SECRET",
+          "description": "Google Cloud OAuth client secret. Prefer google-health-fitbit-mcp-server setup so this secret is stored in ~/.google-health-mcp/config.json instead of MCP client config.",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": true
+        },
+        {
+          "name": "GOOGLE_HEALTH_REDIRECT_URI",
+          "description": "Redirect URI configured in the Google Cloud OAuth client. Optional when configured with google-health-fitbit-mcp-server setup.",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": false
+        },
+        {
+          "name": "GOOGLE_HEALTH_TOKEN_PATH",
+          "description": "Optional local path for OAuth tokens. Defaults to ~/.google-health-mcp/tokens.json.",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": false
+        },
+        {
+          "name": "GOOGLE_HEALTH_PRIVACY_MODE",
+          "description": "Optional payload mode: summary, structured, or raw. Defaults to structured. raw means full Google Health API payloads, not continuous 24/7 raw sensor telemetry.",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": false
+        },
+        {
+          "name": "GOOGLE_HEALTH_CACHE",
+          "description": "Optional SQLite cache toggle. Set to true or sqlite to enable.",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": false
+        },
+        {
+          "name": "GOOGLE_HEALTH_CACHE_PATH",
+          "description": "Optional local SQLite cache path. Defaults to ~/.google-health-mcp/cache.sqlite.",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": false
+        },
+        {
+          "name": "GOOGLE_HEALTH_NO_CACHE",
+          "description": "Set to true to bypass the in-memory HTTP response cache (60s TTL for GET only). POST/PUT/DELETE and 4xx/5xx responses are never cached regardless.",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": false
+        }
+      ]
+    }
+  ],
+  "websiteUrl": "https://github.com/BerkKilicoglu/google-health-fitbit-mcp#readme"
+}

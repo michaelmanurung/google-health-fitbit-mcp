@@ -1,0 +1,22 @@
+node_modules/
+dist/
+.env
+.env.*
+*.log
+.DS_Store
+coverage/
+.strava-mcp/
+
+# MCP Registry local auth tokens
+.mcpregistry_*_token
+.mcpregistry_*
+docs/.vercel/
+.vercel
+
+# macOS Finder duplicate files (Finder appends " 2" when copying into the same folder)
+* 2.ts
+* 2.tsx
+* 2.js
+* 2.mjs
+* 2.json
+* 2.md
