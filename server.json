@@ -6,12 +6,12 @@
     "url": "https://github.com/BerkKilicoglu/google-health-fitbit-mcp",
     "source": "github"
   },
-  "version": "1.0.0",
+  "version": "1.0.2",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "google-health-fitbit-mcp",
-      "version": "1.0.0",
+      "version": "1.0.2",
       "transport": {
         "type": "stdio"
       },

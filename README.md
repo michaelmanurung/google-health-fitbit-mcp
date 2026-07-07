@@ -42,6 +42,21 @@ npx -y google-health-fitbit-mcp auth      # browser OAuth — tokens stay on you
 npx -y google-health-fitbit-mcp checkup   # ✓ verifies everything is ready
 ```
 
+<details>
+<summary><b>🔑 First time? Get your Google Client ID & Secret (~2 min)</b></summary>
+
+`setup` asks for a **Client ID** and **Client Secret**. You create these once, for free, in Google Cloud:
+
+1. **New project** — open [console.cloud.google.com/projectcreate](https://console.cloud.google.com/projectcreate), name it (e.g. `health-mcp`), click **Create**, then select it.
+2. **Enable the API** — open the [Google Health API](https://console.cloud.google.com/apis/library/health.googleapis.com) page and click **Enable**.
+3. **Consent screen** — go to [OAuth consent screen](https://console.cloud.google.com/apis/credentials/consent), choose **External**, and fill in the required app name / email fields. Under **Test users**, **add your own Google account** — skip this and sign-in fails with `403: access_denied`.
+4. **Create the client** — go to [Credentials](https://console.cloud.google.com/apis/credentials) → **+ Create credentials → OAuth client ID** → **Application type: Desktop app** → **Create**.
+5. **Copy** the **Client ID** (ends in `…apps.googleusercontent.com`) and the **Client secret**, then paste each one when `setup` prompts you.
+
+> **Redirect URI:** Desktop-app clients allow the `http://127.0.0.1:3000/callback` loopback automatically — you don't register it anywhere. Just press **Enter** to accept the default when `setup` asks. For every other `setup` prompt (scope preset, privacy mode), pressing **Enter** picks a sensible default.
+
+</details>
+
 **Step 2 — Connect your app:**
 
 <details>
