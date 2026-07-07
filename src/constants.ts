@@ -1,5 +1,5 @@
 export const SERVER_NAME = "google-health-fitbit-mcp-server";
-export const SERVER_VERSION = "0.6.0";
+export const SERVER_VERSION = "1.0.0";
 export const NPM_PACKAGE_NAME = "google-health-fitbit-mcp";
 export const PINNED_NPM_PACKAGE = `${NPM_PACKAGE_NAME}@${SERVER_VERSION}`;
 
