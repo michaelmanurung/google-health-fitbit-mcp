@@ -15,8 +15,8 @@ export function buildCapabilities() {
     status: "beta",
     beta_notice: GOOGLE_HEALTH_BETA_NOTICE,
     api_boundary: {
-      source: "Official Google Health API v4 with Google OAuth 2.0",
-      raw_definition: "Raw means the full JSON response returned by supported Google Health API v4 endpoints under https://health.googleapis.com.",
+      source: "Official Google Health API with Google OAuth 2.0",
+      raw_definition: "Raw means the full JSON response returned by supported Google Health API endpoints under https://health.googleapis.com.",
       does_not_include: [
         "Google Fit REST API legacy endpoints",
         "Android-only Health Connect on-device storage",
@@ -76,7 +76,7 @@ export function buildCapabilities() {
       }
     },
     contribution_paths: [
-      "Add real-account fixture coverage as Google Health v4 stabilizes.",
+      "Add real-account fixture coverage as Google Health stabilizes.",
       "Add source-family-specific UX for Pixel Watch, Fitbit and Google first-party sources.",
       "Add webhook/subscriber support after read-only flows are proven.",
       "Add optional write tools only behind explicit opt-in and safety gates."

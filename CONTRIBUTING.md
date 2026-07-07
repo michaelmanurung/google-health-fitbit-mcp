@@ -32,7 +32,7 @@ write scope.
 | Typed input contract | `LogNutritionInputSchema` in `src/schemas/common.ts` |
 | Safety gate | `checkRemoteWriteGate` / `isLiveWriteAuthorized` in `src/services/remote-write-gate.ts` |
 | Nutrient resolution | `estimateMeal` / `nutrientsForGrams` in `src/services/nutrition-normalize.ts` |
-| v4 DataPoint body | `buildNutritionDataPointBody` in `src/services/google-v4-nutrition-datapoint.ts` |
+| DataPoint body | `buildNutritionDataPointBody` in `src/services/google-v4-nutrition-datapoint.ts` |
 | HTTP create | `client.createNutritionDataPoint(body)` in `src/services/google-health-client.ts` |
 | Write scope | `GOOGLE_HEALTH_NUTRITION_WRITE_SCOPE` in `src/constants.ts` (excluded from `DEFAULT_SCOPES`) |
 | Scope preset | `nutrition-write` in `src/services/scope-presets.ts` |
@@ -59,7 +59,7 @@ manifest.
 
 ### TO-VERIFY before any live POST
 
-The Google Health v4 **create** surface is not exercised anywhere in this repo — the existing
+The Google Health **create** surface is not exercised anywhere in this repo — the existing
 `:rollUp` / `:dailyRollUp` / `:reconcile` POSTs are queries, not mutations, so the create envelope is
 provisional (and `buildNutritionDataPointBody` flags this via `_to_verify`). Before wiring a real
 write, confirm against the [REST reference](https://developers.google.com/health/reference/rest),

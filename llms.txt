@@ -1,5 +1,5 @@
 # Google Health MCP
-Unofficial local-first Google Health API v4 MCP server for AI health, sleep and activity agents.
+Unofficial local-first Google Health API MCP server for AI health, sleep and activity agents.
 Repository: https://github.com/BerkKilicoglu/google-health-fitbit-mcp
 Homepage: https://github.com/BerkKilicoglu/google-health-fitbit-mcp#readme
 NPM: https://www.npmjs.com/package/google-health-fitbit-mcp
@@ -7,7 +7,7 @@ Primary command: npm exec --yes --package=google-health-fitbit-mcp -- google-hea
 MCP command: google-health-fitbit-mcp-server
 
 - MCP registry name: io.github.BerkKilicoglu/google-health-fitbit-mcp
-- Status: beta while Google Health API v4 evolves; check official release notes because scopes and data types can change.
+- Status: beta while Google Health API evolves; check official release notes because scopes and data types can change.
 - Current beta ask: testers with Fitbit, Pixel Watch, Android and Google Health API access should report setup friction and data type gaps.
 - For beta setup reports, run google-health-fitbit-mcp-server support --feedback --json and paste the anonymous bundle into a new GitHub issue.
 - For data coverage reports, run google-health-fitbit-mcp-server coverage --json for a static plan, then google-health-fitbit-mcp-server coverage --live --json after OAuth. Live coverage is read-only and redacted.

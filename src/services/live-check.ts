@@ -65,7 +65,7 @@ export async function runLiveCheck(status: ConnectionStatus, homeDir?: string, l
 // Dry-run write check. NEVER POSTs.
 //   - liveWrite === false: a plain `checkup --live` does not exercise the write path. We report
 //     ok:true if the scope is present (the write rail is ready), else a skip-style message.
-//   - liveWrite === true: build the canonical v4 body from a fixed deterministic sample
+//   - liveWrite === true: build the canonical body from a fixed deterministic sample
 //     (100g banana) and validate its shape, then STOP before POST. (TO-VERIFY: a real POST is
 //     only safe once Google exposes a validateOnly param — see google-v4-nutrition-datapoint.ts.)
 function buildNutritionDryRunCheck(scopeGranted: boolean, liveWrite: boolean): LiveEndpointCheck {
@@ -84,7 +84,7 @@ function buildNutritionDryRunCheck(scopeGranted: boolean, liveWrite: boolean): L
     });
     const valid = body && typeof body === "object" && typeof (body as Record<string, unknown>).dataPoint === "object";
     // STOP before POST. The body is validated, never sent.
-    return valid ? { ok: true, error: "dry-run only — validated v4 body, no POST (envelope TO-VERIFY)" } : { ok: false, error: "v4 body validation failed" };
+    return valid ? { ok: true, error: "dry-run only — validated body, no POST (envelope TO-VERIFY)" } : { ok: false, error: "body validation failed" };
   } catch (error) {
     return { ok: false, error: redactErrorMessage((error as Error).message) };
   }

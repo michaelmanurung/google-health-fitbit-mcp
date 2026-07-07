@@ -169,7 +169,7 @@ export function registerGoogleHealthTools(server: McpServer): void {
     const steps = [
       {
         step: 1,
-        title: hasEnv ? "(done) Google Cloud OAuth client configured" : "Create a Google Cloud OAuth client and enable Google Health API v4",
+        title: hasEnv ? "(done) Google Cloud OAuth client configured" : "Create a Google Cloud OAuth client and enable Google Health API",
         action: hasEnv
           ? "GOOGLE_HEALTH_CLIENT_ID, GOOGLE_HEALTH_CLIENT_SECRET, GOOGLE_HEALTH_REDIRECT_URI are all set."
           : `Open https://console.cloud.google.com/apis/library/health.googleapis.com to enable the API, create an OAuth 2.0 client (type: Desktop), register a redirect URI (use ${status.redirect_uri ?? "http://127.0.0.1:3000/callback"}), then set: ${status.missing_env.join(", ")}.`,
@@ -256,8 +256,8 @@ export function registerGoogleHealthTools(server: McpServer): void {
       },
       notes: [
         "All sample data is synthetic; tagged with is_demo=true.",
-        "Real calls return live data from Google Health API v4 after Google Cloud OAuth setup.",
-        "Google Health API v4 is in beta; field names and shapes may shift before stable launch.",
+        "Real calls return live data from Google Health API after Google Cloud OAuth setup.",
+        "Google Health API is in beta; field names and shapes may shift before stable launch.",
       ],
     };
     const markdown = bulletList("Google Health Demo", {
@@ -705,7 +705,7 @@ export function registerGoogleHealthTools(server: McpServer): void {
   );
 
   // The planned log_nutrition WRITE tool registers here. It is intentionally not shipped yet; the
-  // supporting rails (input schema, write gate, nutrient normalizer, v4 DataPoint builder, client
+  // supporting rails (input schema, write gate, nutrient normalizer, DataPoint builder, client
   // method) already exist. See CONTRIBUTING.md → "Planned: nutrition write" for the wiring plan and
   // the open TO-VERIFY items before enabling a live POST.
 }

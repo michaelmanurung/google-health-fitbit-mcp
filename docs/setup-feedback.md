@@ -1,6 +1,6 @@
 # Setup Feedback
 
-Google Health MCP is beta while the Google Health API v4 stabilizes. If you hit setup friction, unclear tool names, missing data types, or privacy boundaries that feel wrong, an anonymous report helps prioritize fixes.
+Google Health MCP is beta while the Google Health API stabilizes. If you hit setup friction, unclear tool names, missing data types, or privacy boundaries that feel wrong, an anonymous report helps prioritize fixes.
 
 Run:
 

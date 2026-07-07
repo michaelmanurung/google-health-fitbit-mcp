@@ -1,11 +1,11 @@
 <h1 align="center">Google Health Fitbit MCP</h1>
 
 <div align="center">
-  <img src="https://raw.githubusercontent.com/BerkKilicoglu/google-health-fitbit-mcp/main/assets/banner.png" alt="Google Health Fitbit MCP — Google Health API v4 MCP server for AI agents" width="85%" />
+  <img src="https://raw.githubusercontent.com/BerkKilicoglu/google-health-fitbit-mcp/main/assets/banner.png" alt="Google Health Fitbit MCP — Google Health API MCP server for AI agents" width="85%" />
 </div>
 
 <h3 align="center">
-  Query your own Google Health API v4 data &mdash; Fitbit, Pixel Watch and connected partner sources &mdash; over local OAuth. <strong>Beta</strong>.<br>
+  Query your own Google Health API data &mdash; Fitbit, Pixel Watch and connected partner sources &mdash; over local OAuth. <strong>Beta</strong>.<br>
   Everything runs on your own machine &mdash; <strong>your credentials never leave your device</strong>.
 </h3>
 
@@ -19,14 +19,14 @@
 
 ---
 
-**An MCP server that runs locally and hands your AI agent your own Google Health API v4 data — from Fitbit trackers, Pixel Watch and supported partner sources — through OAuth.**
+**An MCP server that runs locally and hands your AI agent your own Google Health API data — from Fitbit trackers, Pixel Watch and supported partner sources — through OAuth.**
 
 - **Install in one command** — `npx -y google-health-fitbit-mcp setup`
 - **Run it in** Claude Desktop · Claude Code · Cursor · Windsurf · Hermes · OpenClaw — see [client examples](https://github.com/BerkKilicoglu/google-health-fitbit-mcp/tree/main/examples).
 - **On your machine** — OAuth tokens are stored locally with `0600` permissions and are never returned by any tool ([privacy](#privacy--what-runs-offline)).
 - **Read-only by default** — every shipped data tool is a read. Writes are a gated, opt-in, dry-run-first design that is not enabled.
 
-> **Beta status:** Google Health API v4 is available to developers but the surface is still moving. Because Google's release notes keep listing scope and data-type changes after launch, this connector remains in beta and steers testers toward safe read-only validation before any production use.
+> **Beta status:** Google Health API is available to developers but the surface is still moving. Because Google's release notes keep listing scope and data-type changes after launch, this connector remains in beta and steers testers toward safe read-only validation before any production use.
 
 > Independent, community-built connector — no affiliation with, endorsement from or support by Google, Fitbit or Alphabet. Not a medical device or medical advice; treat the data as trend context only.
 
@@ -117,7 +117,7 @@ Run google_health_connection_status and tell me if I'm connected.
 
 ## Why this exists
 
-The Google Health API is the successor to the Fitbit Web API: new OAuth, new base URL (`https://health.googleapis.com`), a v4 endpoint schema, standardized kebab-case data types, reconciled cross-source streams and daily/physical-time rollups.
+The Google Health API is the successor to the Fitbit Web API: new OAuth, new base URL (`https://health.googleapis.com`), a streamlined endpoint schema, standardized kebab-case data types, reconciled cross-source streams and daily/physical-time rollups.
 
 It gives agents a clean path to explore the API, verify their setup, sign in locally and pull data — with no need to paste tokens into prompts or agent configs.
 
@@ -155,7 +155,7 @@ which device is producing my sleep and heart-rate data.
 | `google_health_list_data_types` | The 39 kebab-case data-type slugs with units, scopes and supported verbs |
 | `google_health_demo` | Realistic synthetic payloads so agents see the contract before real calls |
 
-### Data reads (Google Health API v4)
+### Data reads (Google Health API)
 
 | Tool | Endpoint |
 |---|---|
@@ -319,7 +319,7 @@ All commands run via `npx -y google-health-fitbit-mcp <command>` (installed bina
 
 ## Beta testers wanted
 
-Right now the most valuable thing you can contribute is hands-on setup feedback from real Fitbit, Pixel Watch, Android and Google Health API v4 accounts.
+Right now the most valuable thing you can contribute is hands-on setup feedback from real Fitbit, Pixel Watch, Android and Google Health API accounts.
 
 If you have a real account to test with:
 

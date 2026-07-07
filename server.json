@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.BerkKilicoglu/google-health-fitbit-mcp",
-  "description": "Privacy-first Google Health API v4 MCP server for health, sleep, activity and HR agents",
+  "description": "Privacy-first Google Health API MCP server for health, sleep, activity and HR agents",
   "repository": {
     "url": "https://github.com/BerkKilicoglu/google-health-fitbit-mcp",
     "source": "github"

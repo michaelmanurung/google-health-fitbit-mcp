@@ -380,7 +380,7 @@ Usage:
   google-health-fitbit-mcp-server checkup --client hermes
   google-health-fitbit-mcp-server checkup --fix   Fix local config/token permissions, then check setup
   google-health-fitbit-mcp-server checkup --live  Call safe Google Health endpoints to prove API reachability
-  google-health-fitbit-mcp-server checkup --live-write  Also dry-run the nutrition write path (validates the v4 body; never POSTs)
+  google-health-fitbit-mcp-server checkup --live-write  Also dry-run the nutrition write path (validates the body; never POSTs)
   google-health-fitbit-mcp-server support         Print a redacted support bundle for GitHub issues
   google-health-fitbit-mcp-server support --json  Print redacted support bundle as JSON
   google-health-fitbit-mcp-server support --feedback --json

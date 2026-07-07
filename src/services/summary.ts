@@ -256,12 +256,12 @@ export async function buildDailySummary(client: Pick<GoogleHealthClient, "dailyR
     scorecard: stats,
     diagnostic: {
       readiness_context: classifyReadiness(stats),
-      primary_signal: "Google Health v4 data is useful trend context; avoid over-interpreting any single day or single sensor.",
+      primary_signal: "Google Health data is useful trend context; avoid over-interpreting any single day or single sensor.",
       action_candidates: actions(stats)
     },
     safety: {
       medical_advice: false,
-      api_boundary: "Google Health API v4 returns user-authorized health and fitness metrics from Fitbit, Pixel Watch and supported third-party sources; this MCP does not expose raw sensor telemetry."
+      api_boundary: "Google Health API returns user-authorized health and fitness metrics from Fitbit, Pixel Watch and supported third-party sources; this MCP does not expose raw sensor telemetry."
     }
   };
 }

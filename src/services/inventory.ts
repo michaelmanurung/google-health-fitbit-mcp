@@ -83,7 +83,7 @@ export function buildDataInventory() {
       "Filter fields use snake case, such as heart_rate.sample_time.physical_time or sleep.interval.civil_start_time.",
       "Call the connection status tool before live data tools to verify credentials and local token readiness.",
       "Use raw privacy mode only when the user explicitly requests upstream payloads.",
-      "Google Health API v4 is still evolving; check official release notes before production launch decisions because scopes and data types can change."
+      "Google Health API is still evolving; check official release notes before production launch decisions because scopes and data types can change."
     ]
   };
 }

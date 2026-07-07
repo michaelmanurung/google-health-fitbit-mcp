@@ -1,6 +1,6 @@
 # Data Coverage
 
-Google Health API v4 is still evolving, so real coverage of data types, source families, and operations (list/reconcile/rollup) can differ from the static plan in `src/constants.ts`.
+Google Health API is still evolving, so real coverage of data types, source families, and operations (list/reconcile/rollup) can differ from the static plan in `src/constants.ts`.
 
 ## Static plan
 

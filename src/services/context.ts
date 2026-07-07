@@ -33,7 +33,7 @@ export async function buildWellnessContext(client: Pick<GoogleHealthClient, "dai
     recent_training_load: recentTrainingLoad,
     soreness: options.soreness ?? [],
     injury_flags: options.injury_flags ?? [],
-    notes: [options.notes, "Google Health API v4 beta connector; use as trend context, not diagnosis."].filter((note): note is string => Boolean(note)),
+    notes: [options.notes, "Google Health API beta connector; use as trend context, not diagnosis."].filter((note): note is string => Boolean(note)),
     data_quality: summary.data_quality,
     telegram_summary: [
       "Google Health wellness context",

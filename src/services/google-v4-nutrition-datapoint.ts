@@ -1,4 +1,4 @@
-// Maps a normalized NutrientMap (from nutrition-normalize.ts) → a Google Health API v4
+// Maps a normalized NutrientMap (from nutrition-normalize.ts) → a Google Health API
 // create-DataPoint request body, plus the unit shim between NutrientMap units and the units
 // Google Health expects.
 //

@@ -12,7 +12,7 @@ export const DateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$|^today$/).defaul
 export const DateTimeSchema = z.string().datetime({ offset: true }).describe("ISO 8601 date-time with timezone, e.g. 2026-05-01T00:00:00Z");
 export const GoogleHealthDataTypeSchema = z.string()
   .regex(/^[a-z0-9][a-z0-9-]*$/)
-  .describe(`Google Health data type in kebab case. Supported slugs (call google_health_list_data_types for units and which verbs each supports): ${GOOGLE_HEALTH_DATA_TYPE_SLUGS.join(", ")}. Other valid v4 kebab-case slugs are also accepted.`);
+  .describe(`Google Health data type in kebab case. Supported slugs (call google_health_list_data_types for units and which verbs each supports): ${GOOGLE_HEALTH_DATA_TYPE_SLUGS.join(", ")}. Other valid kebab-case slugs are also accepted.`);
 export const DataSourceFamilySchema = z.enum(GOOGLE_HEALTH_DATA_SOURCE_FAMILIES).optional();
 
 export const SimpleReadInputSchema = z.object({
@@ -43,7 +43,7 @@ export const ConnectionStatusInputSchema = z.object({
 }).strict();
 
 // Typed input contract for the planned (not-yet-registered) log_nutrition write tool. Defined now
-// so the write gate, nutrient normalizer and v4 DataPoint mapper share one contract. Reuse this
+// so the write gate, nutrient normalizer and DataPoint mapper share one contract. Reuse this
 // schema when the tool ships. See CONTRIBUTING.md → "Planned: nutrition write".
 export const LogNutritionInputSchema = z.object({
   // free-text path OR explicit nutrients/food

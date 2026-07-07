@@ -74,7 +74,7 @@ export function buildAgentManifest(client: AgentClientName = "generic") {
       binary: "google-health-fitbit-mcp-server"
     },
     oauth: {
-      provider: "Google OAuth 2.0 for Google Health API v4",
+      provider: "Google OAuth 2.0 for Google Health API",
       redirect_uri: "http://127.0.0.1:3000/callback",
       scopes: DEFAULT_SCOPES,
       token_storage: "~/.google-health-mcp/tokens.json with 0600 permissions",
@@ -175,7 +175,7 @@ export function hermesConfigSnippet(): string {
 export function hermesSkillMarkdown(): string {
   return `# Google Health MCP Skill
 
-Use this skill whenever a user asks Hermes to inspect Google Health API v4 activity, sleep, heart, body, nutrition, daily summaries or weekly summaries through the Google Health MCP.
+Use this skill whenever a user asks Hermes to inspect Google Health API activity, sleep, heart, body, nutrition, daily summaries or weekly summaries through the Google Health MCP.
 
 ## Rules
 - Start with \`mcp_google_health_google_health_connection_status\`.

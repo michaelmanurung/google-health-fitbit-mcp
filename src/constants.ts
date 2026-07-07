@@ -42,11 +42,11 @@ export const GOOGLE_HEALTH_DATA_SOURCE_FAMILIES = [
   "users/me/dataSourceFamilies/google-sources"
 ] as const;
 
-// Canonical, agent-discoverable catalog of Google Health v4 data-type slugs this server exercises.
+// Canonical, agent-discoverable catalog of Google Health data-type slugs this server exercises.
 // Single source of truth for: (a) the GoogleHealthDataTypeSchema description agents read in the
 // tool definition, and (b) the google_health_list_data_types tool. `supports` lists which endpoint
 // verbs accept the slug (list = listDataPoints, reconcile = reconcileDataPoints, rollup = dailyRollUp
-// + rollUp). Slugs stay in kebab case; the API still accepts other v4 slugs, so this is a guide, not
+// + rollUp). Slugs stay in kebab case; the API still accepts other slugs, so this is a guide, not
 // a hard allow-list (GoogleHealthDataTypeSchema remains an open kebab-case string).
 export const GOOGLE_HEALTH_DATA_TYPES_SOURCE = {
   url: "https://developers.google.com/health/data-types",
@@ -101,4 +101,4 @@ export const GOOGLE_HEALTH_DATA_TYPES = [
 export const GOOGLE_HEALTH_DATA_TYPE_SLUGS = GOOGLE_HEALTH_DATA_TYPES.map((entry) => entry.slug);
 
 export const GOOGLE_HEALTH_BETA_NOTICE =
-  "Google Health API v4 is new and still evolving; check the official release notes before stable public launches because scopes and data types can change.";
+  "Google Health API is new and still evolving; check the official release notes before stable public launches because scopes and data types can change.";
