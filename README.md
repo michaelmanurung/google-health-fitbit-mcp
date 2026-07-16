@@ -11,7 +11,7 @@
 
 <p align="center">
   <a href="https://www.npmjs.com/package/google-health-fitbit-mcp"><img src="https://img.shields.io/npm/v/google-health-fitbit-mcp?style=for-the-badge&labelColor=0F172A&color=10B981&logo=npm&logoColor=white" alt="npm version" /></a>
-  <a href="https://www.npmjs.com/package/google-health-fitbit-mcp"><img src="https://img.shields.io/npm/dm/google-health-fitbit-mcp?style=for-the-badge&labelColor=0F172A&color=0EA5A3&logo=npm&logoColor=white" alt="npm downloads" /></a>
+  <a href="https://www.npmjs.com/package/google-health-fitbit-mcp"><img src="https://img.shields.io/npm/dt/google-health-fitbit-mcp?style=for-the-badge&labelColor=0F172A&color=0EA5A3&logo=npm&logoColor=white" alt="npm downloads" /></a>
   <a href="https://github.com/BerkKilicoglu/google-health-fitbit-mcp/blob/main/LICENSE"><img src="https://img.shields.io/badge/LICENSE-MIT-22C55E?style=for-the-badge&labelColor=0F172A" alt="License MIT" /></a>
   <a href="https://modelcontextprotocol.io"><img src="https://img.shields.io/badge/BUILT_FOR-MCP-7C3AED?style=for-the-badge&labelColor=0F172A" alt="Built for MCP" /></a>
   <a href="https://github.com/BerkKilicoglu/google-health-fitbit-mcp/stargazers"><img src="https://img.shields.io/github/stars/BerkKilicoglu/google-health-fitbit-mcp?style=for-the-badge&labelColor=0F172A&color=FBBF24&logo=github" alt="GitHub stars" /></a>
