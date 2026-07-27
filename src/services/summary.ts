@@ -67,12 +67,48 @@ async function dailyBundle(client: Pick<GoogleHealthClient, "dailyRollup" | "rec
     safe(() => client.dailyRollup({ dataType: "distance", startDate: date, endDate }), "dailyRollUp:distance"),
     safe(() => client.dailyRollup({ dataType: "total-calories", startDate: date, endDate }), "dailyRollUp:total-calories"),
     safe(() => client.dailyRollup({ dataType: "active-zone-minutes", startDate: date, endDate }), "dailyRollUp:active-zone-minutes"),
-    safe(() => client.reconcileDataPoints({ dataType: "daily-resting-heart-rate", filter: `daily_resting_heart_rate.interval.civil_start_time >= "${date}" AND daily_resting_heart_rate.interval.civil_start_time < "${endDate}"`, pageSize: 25 }), "reconcile:daily-resting-heart-rate"),
-    safe(() => client.reconcileDataPoints({ dataType: "sleep", filter: `sleep.interval.civil_start_time >= "${date}" AND sleep.interval.civil_start_time < "${endDate}"`, pageSize: 25, dataSourceFamily: "users/me/dataSourceFamilies/google-wearables" }), "reconcile:sleep"),
-    safe(() => client.reconcileDataPoints({ dataType: "daily-heart-rate-variability", filter: `daily_heart_rate_variability.interval.civil_start_time >= "${date}" AND daily_heart_rate_variability.interval.civil_start_time < "${endDate}"`, pageSize: 25 }), "reconcile:daily-heart-rate-variability"),
+    // "daily-resting-heart-rate" is a Daily-kind type keyed by a {year, month, day} `date` object,
+    // not an `interval` — there is no interval.civil_start_time field to filter on, so previously
+    // this always matched zero points. Fetch recent points unfiltered and match the date client-side.
+    safe(() => client.reconcileDataPoints({ dataType: "daily-resting-heart-rate", pageSize: 25 }), "reconcile:daily-resting-heart-rate"),
+    // The live API rejects interval.civil_start_time (and interval.start_time) as a filterable
+    // member for sleep entirely — every call with this filter returned HTTP 400
+    // INVALID_DATA_POINT_FILTER_DATA_TYPE_MEMBER, which `safe()` silently turned into "no data".
+    // Sleep reconcile doesn't support server-side interval filtering at all here, so fetch
+    // unfiltered and match each session's local (civil) start date client-side instead.
+    safe(() => client.reconcileDataPoints({ dataType: "sleep", pageSize: 30 }), "reconcile:sleep"),
+    // Same Daily-kind field issue as resting heart rate above.
+    safe(() => client.reconcileDataPoints({ dataType: "daily-heart-rate-variability", pageSize: 25 }), "reconcile:daily-heart-rate-variability"),
     safe(() => client.dailyRollup({ dataType: "weight", startDate: date, endDate }), "dailyRollUp:weight")
   ]);
   return { date, steps, distance, calories, activeZoneMinutes, heartRate, sleep, hrv, weight };
+}
+
+function matchesCivilDate(record: UnknownRecord, date: string): boolean {
+  const dateObj = record.date;
+  if (!isObject(dateObj)) return false;
+  const year = numberFrom(dateObj.year);
+  const month = numberFrom(dateObj.month);
+  const day = numberFrom(dateObj.day);
+  if (year === undefined || month === undefined || day === undefined) return false;
+  const [targetYear, targetMonth, targetDay] = date.split("-").map(Number);
+  return year === targetYear && month === targetMonth && day === targetDay;
+}
+
+// Sleep intervals carry a UTC startTime plus a startUtcOffset (seconds); the local/civil
+// calendar date is the one that matters for "which night did this session start on".
+function civilDateFromInterval(interval: unknown): string | undefined {
+  if (!isObject(interval)) return undefined;
+  const startTime = interval.startTime;
+  if (typeof startTime !== "string") return undefined;
+  const offsetSeconds = (() => {
+    const raw = interval.startUtcOffset;
+    if (typeof raw === "string") return Number(raw.replace(/s$/, "")) || 0;
+    if (typeof raw === "number") return raw;
+    return 0;
+  })();
+  const localMs = new Date(startTime).getTime() + offsetSeconds * 1000;
+  return new Date(localMs).toISOString().slice(0, 10);
 }
 
 function firstRollup(payload: unknown, key: string): UnknownRecord {
@@ -114,9 +150,10 @@ function findNestedNumber(value: unknown, candidates: string[]): number | undefi
   return undefined;
 }
 
-function sleepMinutes(points: UnknownRecord[]): number | undefined {
+function sleepMinutes(points: UnknownRecord[], date: string): number | undefined {
   const minutes = points
     .map((point) => isObject(point.sleep) ? point.sleep as UnknownRecord : {})
+    .filter((sleep) => civilDateFromInterval(sleep.interval) === date)
     .map((sleep) => findNestedNumber(sleep.summary, ["minutesAsleep", "minutesInSleepPeriod"]))
     .filter((value): value is number => value !== undefined);
   if (minutes.length === 0) return undefined;
@@ -156,16 +193,20 @@ function dailyStats(bundle: Awaited<ReturnType<typeof dailyBundle>>) {
   const calories = firstRollup(bundle.calories, "totalCalories");
   const activeZoneMinutes = firstRollup(bundle.activeZoneMinutes, "activeZoneMinutes");
   const weight = firstRollup(bundle.weight, "weight");
-  const heartPoint = reconciled(bundle.heartRate)[0];
-  const hrvPoint = reconciled(bundle.hrv)[0];
+  const heartPoint = reconciled(bundle.heartRate)
+    .map((point) => isObject(point.dailyRestingHeartRate) ? point.dailyRestingHeartRate as UnknownRecord : {})
+    .find((point) => matchesCivilDate(point, bundle.date)) ?? {};
+  const hrvPoint = reconciled(bundle.hrv)
+    .map((point) => isObject(point.dailyHeartRateVariability) ? point.dailyHeartRateVariability as UnknownRecord : {})
+    .find((point) => matchesCivilDate(point, bundle.date)) ?? {};
 
   const stepsVal = findNestedNumber(steps, ["countSum", "count"]);
   const distanceVal = distanceMeters(distance);
   const caloriesVal = findNestedNumber(calories, ["kcalSum", "kilocaloriesSum", "caloriesSum", "valueSum"]);
   const azmVal = activeZoneTotal(activeZoneMinutes);
-  const sleepVal = sleepMinutes(reconciled(bundle.sleep));
+  const sleepVal = sleepMinutes(reconciled(bundle.sleep), bundle.date);
   const heartVal = findNestedNumber(heartPoint, ["beatsPerMinute", "bpm", "value", "restingHeartRate"]);
-  const hrvVal = findNestedNumber(hrvPoint, ["rmssd", "rmssdMillis", "value"]);
+  const hrvVal = findNestedNumber(hrvPoint, ["averageHeartRateVariabilityMilliseconds", "rmssd", "rmssdMillis", "value"]);
   const weightVal = weightKg(weight);
 
   return {

@@ -2,28 +2,68 @@ import assert from 'node:assert/strict';
 import { buildDailySummary, buildWeeklySummary } from '../dist/services/summary.js';
 import { buildWellnessContext } from '../dist/services/context.js';
 
+function civilDate(dateStr) {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  return { year, month, day };
+}
+
+// Real daily-resting-heart-rate / daily-heart-rate-variability endpoints return several days
+// of unfiltered points at once (see the dataSourceFamily/filter fix in summary.ts), so the
+// fake client mimics that shape here instead of returning a single pre-filtered point — this
+// is what would have caught the earlier date-matching and field-name bugs.
 const fakeClient = {
-  async dailyRollup({ dataType }) {
+  async dailyRollup({ dataType, startDate }) {
     if (dataType === 'steps') return { rollupDataPoints: [{ steps: { countSum: '9000' } }] };
     if (dataType === 'distance') return { rollupDataPoints: [{ distance: { metersSum: '7200' } }] };
     if (dataType === 'total-calories') return { rollupDataPoints: [{ totalCalories: { kcalSum: 2400 } }] };
     if (dataType === 'active-zone-minutes') return { rollupDataPoints: [{ activeZoneMinutes: { sumInFatBurnHeartZone: '20', sumInCardioHeartZone: '25', sumInPeakHeartZone: '15' } }] };
     if (dataType === 'weight') return { rollupDataPoints: [{ weight: { weightGramsAvg: 80000 } }] };
-    throw new Error(`unexpected rollup ${dataType}`);
+    throw new Error(`unexpected rollup ${dataType} for ${startDate}`);
   },
   async reconcileDataPoints({ dataType }) {
     if (dataType === 'daily-resting-heart-rate') {
-      return { dataPoints: [{ dailyRestingHeartRate: { beatsPerMinute: 58 } }] };
+      // Unfiltered batch spanning several days, in descending date order like the real API.
+      return {
+        dataPoints: [
+          { dailyRestingHeartRate: { date: civilDate(todayStr()), beatsPerMinute: 58 } },
+          { dailyRestingHeartRate: { date: civilDate(yesterdayStr()), beatsPerMinute: 61 } }
+        ]
+      };
     }
     if (dataType === 'sleep') {
-      return { dataPoints: [{ sleep: { summary: { minutesAsleep: '430' } } }] };
+      // No dataSourceFamily filter now, and no interval filter (API rejects it) — a
+      // Fitbit-sourced point with a real interval must still match the target civil date.
+      return {
+        dataPoints: [
+          {
+            dataSource: { platform: 'FITBIT' },
+            sleep: {
+              interval: { startTime: `${todayStr()}T10:00:00Z`, startUtcOffset: '7200s' },
+              summary: { minutesAsleep: '430' }
+            }
+          }
+        ]
+      };
     }
     if (dataType === 'daily-heart-rate-variability') {
-      return { dataPoints: [{ dailyHeartRateVariability: { rmssd: 48.2 } }] };
+      return {
+        dataPoints: [
+          { dailyHeartRateVariability: { date: civilDate(todayStr()), averageHeartRateVariabilityMilliseconds: 48.2 } },
+          { dailyHeartRateVariability: { date: civilDate(yesterdayStr()), averageHeartRateVariabilityMilliseconds: 50.1 } }
+        ]
+      };
     }
     throw new Error(`unexpected reconcile ${dataType}`);
   }
 };
+
+function todayStr() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function yesterdayStr() {
+  return new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+}
 
 const daily = await buildDailySummary(fakeClient, { date: 'today', timezone: 'UTC' });
 assert.equal(daily.kind, 'daily_summary');
