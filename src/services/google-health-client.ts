@@ -12,6 +12,7 @@ import { NUTRITION_DATA_TYPE } from "./google-v4-nutrition-datapoint.js";
 import { disabledCacheStatus, GoogleHealthCache, type CacheStatus } from "./cache.js";
 import { fetchWithCache, getCacheStats } from "./http-cache.js";
 import { fetchWithRetry } from "./http-retry.js";
+import { ensureInteractiveReauth, GrantRevokedError } from "./interactive-auth.js";
 import { redactErrorMessage } from "./redaction.js";
 import { TokenStore } from "./token-store.js";
 
@@ -218,7 +219,7 @@ export class GoogleHealthClient {
     });
 
     if (response.status === 401) {
-      const refreshed = await this.refreshToken(true);
+      const refreshed = await this.forceRefresh();
       const retry = await this.fetchWithRetry(url, {
         method,
         headers: this.jsonHeaders(refreshed.access_token),
@@ -241,6 +242,16 @@ export class GoogleHealthClient {
   }
 
   private async getValidToken(): Promise<GoogleHealthTokenSet> {
+    try {
+      return await this.readOrRefreshToken();
+    } catch (error) {
+      if (!(error instanceof GrantRevokedError)) throw error;
+      await this.recoverRevokedGrant(error);
+      return this.readOrRefreshToken();
+    }
+  }
+
+  private async readOrRefreshToken(): Promise<GoogleHealthTokenSet> {
     const tokens = await this.tokenStore.read();
     if (!tokens?.access_token) {
       throw new Error("Google Health token not found. Run google-health-fitbit-mcp-server auth, or use google_health_get_auth_url then google_health_exchange_code.");
@@ -250,11 +261,47 @@ export class GoogleHealthClient {
     return shouldRefresh ? this.refreshToken(false) : tokens;
   }
 
+  private async forceRefresh(): Promise<GoogleHealthTokenSet> {
+    try {
+      return await this.refreshToken(true);
+    } catch (error) {
+      if (!(error instanceof GrantRevokedError)) throw error;
+      await this.recoverRevokedGrant(error);
+      return this.readOrRefreshToken();
+    }
+  }
+
+  // Runs outside the token lock on purpose: the interactive flow ends in exchangeCode(), which takes
+  // the same lock to persist the new token set. Calling it from inside refreshToken() would deadlock
+  // until the lock timeout.
+  private async recoverRevokedGrant(error: GrantRevokedError): Promise<void> {
+    const outcome = await ensureInteractiveReauth({
+      config: this.config,
+      buildAuthUrl: (state) => this.authUrl(state),
+      exchangeCode: async (code) => {
+        await this.exchangeCode(code);
+      }
+    });
+    if (outcome.status === "completed") return;
+    if (outcome.status === "pending") {
+      throw new Error(
+        outcome.browser_opened
+          ? `${error.message} A browser window was opened so you can approve access again — finish it, then retry this request. ` +
+            `If no window appeared, visit: ${outcome.auth_url}`
+          : `${error.message} Approve access at this URL, then retry this request: ${outcome.auth_url}`
+      );
+    }
+    throw new Error(
+      `${error.message} Automatic re-authorization did not run (${outcome.reason}). ` +
+      "Run `google-health-fitbit-mcp-server auth`, or call google_health_get_auth_url then google_health_exchange_code."
+    );
+  }
+
   private async refreshToken(force: boolean): Promise<GoogleHealthTokenSet> {
     return this.tokenStore.withLock(async () => {
       const current = await this.tokenStore.read();
       if (!current?.refresh_token) {
-        throw new Error("Google Health refresh token not found. Re-authorize with google-health-fitbit-mcp-server auth.");
+        throw new GrantRevokedError("Google Health refresh token not found.");
       }
       if (!force && current.expires_at && current.expires_at - Math.floor(Date.now() / 1000) >= 300) return current;
 
@@ -264,7 +311,12 @@ export class GoogleHealthClient {
         grant_type: "refresh_token",
         refresh_token: current.refresh_token
       });
-      const refreshed = await this.requestTokens(body);
+      const refreshed = await this.requestTokens(body).catch((cause: unknown) => {
+        if (isInvalidGrant(cause)) {
+          throw new GrantRevokedError("Google Health authorization expired or was revoked.");
+        }
+        throw cause;
+      });
       await this.tokenStore.write({ ...current, ...refreshed, refresh_token: refreshed.refresh_token ?? current.refresh_token });
       return { ...current, ...refreshed, refresh_token: refreshed.refresh_token ?? current.refresh_token };
     });
@@ -396,6 +448,12 @@ function nextDate(value: string): string {
 
 function cleanObject(input: Record<string, unknown>): Record<string, unknown> {
   return Object.fromEntries(Object.entries(input).filter(([, value]) => value !== undefined && value !== null && value !== ""));
+}
+
+// Google answers a dead grant with HTTP 400 {"error":"invalid_grant"} on the token endpoint, which
+// parseResponse has already flattened into the thrown message.
+function isInvalidGrant(error: unknown): boolean {
+  return error instanceof Error && /invalid_grant/i.test(error.message);
 }
 
 function safeJson(text: string): unknown {

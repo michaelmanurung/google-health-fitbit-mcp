@@ -55,6 +55,8 @@ npx -y google-health-fitbit-mcp checkup   # ✓ verifies everything is ready
 
 > **Redirect URI:** Desktop-app clients allow the `http://127.0.0.1:3000/callback` loopback automatically — you don't register it anywhere. Just press **Enter** to accept the default when `setup` asks. For every other `setup` prompt (scope preset, privacy mode), pressing **Enter** picks a sensible default.
 
+> **Heads-up — the 7-day rule:** while the consent screen sits in **Testing** publishing status, Google revokes refresh tokens after 7 days. Around once a week the next request fails with `invalid_grant`, which is normal and not a bug in this server. It reopens the consent flow for you (see [Staying connected](#staying-connected)); approving takes a couple of seconds. Publishing the app removes the expiry entirely — check what your scopes require on the consent screen before switching.
+
 </details>
 
 **Step 2 — Connect your app:**
@@ -267,6 +269,14 @@ npx -y google-health-fitbit-mcp support             # shareable support bundle, 
 npx -y google-health-fitbit-mcp support --feedback --json  # anonymous setup feedback bundle
 ```
 
+### Staying connected
+
+Access tokens refresh silently in the background. The refresh token behind them is what expires — Google revokes it after 7 days while the consent screen is in **Testing** publishing status, and the next call comes back as `invalid_grant`. Retrying cannot fix that: the grant is gone, and only a fresh authorization brings it back.
+
+So the server does the authorization for you. On the first call that hits a revoked grant it opens your browser at Google's consent screen; approve, and the original request finishes on its own — no command to run, nothing to diagnose. If you take longer than `GOOGLE_HEALTH_REAUTH_WAIT_MS` (45s by default), the call returns the URL instead and the listener stays up, so approving still works and the next request goes through.
+
+This only runs on the local `stdio` transport, where the browser and the server are on the same machine. Under the HTTP transport — where the server may be remote, and its default port collides with the loopback redirect — the call fails with an explicit instruction to run `auth` instead. Set `GOOGLE_HEALTH_AUTO_REAUTH=0` to always handle re-authorization yourself, or `GOOGLE_HEALTH_AUTH_NO_BROWSER=1` on headless hosts to get the URL without a browser launch.
+
 ### MCP client config
 
 Claude Desktop / Cursor / Windsurf (see [examples/](https://github.com/BerkKilicoglu/google-health-fitbit-mcp/tree/main/examples)):
@@ -314,6 +324,9 @@ npx -y google-health-fitbit-mcp --http   # serves http://127.0.0.1:3000/mcp (+ /
 | `GOOGLE_HEALTH_NO_CACHE` | Bypass the in-memory HTTP cache (60s TTL, GET-only) | unset |
 | `GOOGLE_HEALTH_MCP_TRANSPORT` | `stdio` \| `http` | `stdio` |
 | `GOOGLE_HEALTH_MCP_HOST` / `GOOGLE_HEALTH_MCP_PORT` | HTTP transport bind address | `127.0.0.1` / `3000` |
+| `GOOGLE_HEALTH_AUTO_REAUTH` | Reopen the consent flow automatically when the grant is revoked (`0`/`false` to disable) | enabled |
+| `GOOGLE_HEALTH_REAUTH_WAIT_MS` | How long a tool call waits for you to approve before returning the URL instead | `45000` |
+| `GOOGLE_HEALTH_AUTH_NO_BROWSER` | Never launch a browser; print/return the URL only (headless hosts) | unset |
 
 Reliability built in: every Google call goes through retry middleware (exponential backoff + jitter, honors `Retry-After`, retries 408/429/5xx) and a 60-second GET-only response cache. Multi-day summaries limit request concurrency to stay under rate limits.
 
