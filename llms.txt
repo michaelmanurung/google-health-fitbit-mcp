@@ -1,5 +1,5 @@
-# Google Health MCP
-Unofficial local-first Google Health API MCP server for AI health, sleep and activity agents.
+# Google Health Fitbit MCP
+Unofficial local-first MCP server that reads your own Fitbit, Pixel Watch and Google Health API data — sleep, activity, heart rate and HRV — for AI agents over local OAuth.
 Repository: https://github.com/BerkKilicoglu/google-health-fitbit-mcp
 Homepage: https://github.com/BerkKilicoglu/google-health-fitbit-mcp#readme
 NPM: https://www.npmjs.com/package/google-health-fitbit-mcp
