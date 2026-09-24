@@ -21,7 +21,6 @@ const STANDARD_TOOLS = [
   "google_health_daily_summary",
   "google_health_data_inventory",
   "google_health_demo",
-  "google_health_exchange_code",
   "google_health_get_auth_url",
   "google_health_get_data_point",
   "google_health_get_identity",

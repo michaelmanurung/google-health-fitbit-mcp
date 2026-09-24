@@ -63,11 +63,6 @@ export const AuthUrlInputSchema = z.object({
   response_format: ResponseFormatSchema
 }).strict();
 
-export const ExchangeCodeInputSchema = z.object({
-  code: z.string().min(1).describe("OAuth authorization code, or a full redirect URL containing ?code=..."),
-  response_format: ResponseFormatSchema
-}).strict();
-
 export const DataPointsInputSchema = z.object({
   data_type: GoogleHealthDataTypeSchema.default("steps"),
   filter: z.string().max(1000).optional().describe("Optional Google AIP-160 filter expression. Use snake_case field names in filters."),
@@ -147,14 +142,6 @@ export const AuthUrlOutputSchema = z.object({
   redirect_uri: z.string(),
   scopes: z.array(z.string()),
   next_step: z.string()
-}).strict();
-
-export const ExchangeCodeOutputSchema = z.object({
-  ok: z.boolean(),
-  token_path: z.string(),
-  scope: z.string().optional(),
-  expires_at: z.number().optional(),
-  note: z.string()
 }).strict();
 
 export const EndpointDataOutputSchema = z.object({
@@ -367,7 +354,6 @@ export type SimpleReadInput = z.infer<typeof SimpleReadInputSchema>;
 export type ResponseOnlyInput = z.infer<typeof ResponseOnlyInputSchema>;
 export type AgentManifestInput = z.infer<typeof AgentManifestInputSchema>;
 export type AuthUrlInput = z.infer<typeof AuthUrlInputSchema>;
-export type ExchangeCodeInput = z.infer<typeof ExchangeCodeInputSchema>;
 export type DailySummaryInput = z.infer<typeof DailySummaryInputSchema>;
 export type WellnessContextInput = z.infer<typeof WellnessContextInputSchema>;
 export type WeeklySummaryInput = z.infer<typeof WeeklySummaryInputSchema>;

@@ -10,7 +10,7 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 
-const removedTool = 'google_health_revoke_access';
+const removedTools = ['google_health_revoke_access', 'google_health_exchange_code'];
 const home = mkdtempSync(join(tmpdir(), 'google-health-auth-boundary-'));
 const tokenPath = join(home, 'tokens.json');
 const networkLog = join(home, 'network.log');
@@ -46,24 +46,29 @@ const httpToken = randomBytes(32).toString('base64url');
 
 async function checkBoundary(client) {
   const { tools } = await client.listTools();
-  assert.equal(tools.length, 28);
-  assert.ok(!tools.some(({ name }) => name === removedTool));
-  for (const name of ['google_health_get_auth_url', 'google_health_exchange_code']) {
-    assert.ok(tools.some((tool) => tool.name === name), `${name} must remain available`);
-  }
+  assert.equal(tools.length, 27);
+  assert.ok(tools.some(({ name }) => name === 'google_health_get_auth_url'));
   const manifest = await client.callTool({ name: 'google_health_agent_manifest', arguments: { response_format: 'json' } });
-  assert.ok(!manifest.structuredContent.standard_tools.includes(removedTool));
-  // SDK versions may return a tool error or reject with a protocol error.
-  let errorText;
-  try {
-    const result = await client.callTool({ name: removedTool, arguments: { response_format: 'json' } });
-    assert.equal(result.isError, true);
-    errorText = JSON.stringify(result.content);
-  } catch (error) {
-    errorText = error.message;
+  for (const removedTool of removedTools) {
+    assert.ok(!tools.some(({ name }) => name === removedTool));
+    assert.ok(!manifest.structuredContent.standard_tools.includes(removedTool));
+    // Unknown tools must remain unreachable, even with a claimed confirmation.
+    for (const arguments_ of [
+      { code: 'untrusted', response_format: 'json' },
+      { code: 'http://127.0.0.1:3000/callback?code=untrusted&state=forged', explicit_user_intent: true }
+    ]) {
+      let errorText;
+      try {
+        const result = await client.callTool({ name: removedTool, arguments: arguments_ });
+        assert.equal(result.isError, true);
+        errorText = JSON.stringify(result.content);
+      } catch (error) {
+        errorText = error.message;
+      }
+      assert.match(errorText, /not found|unknown tool/i);
+      assert.ok(errorText.includes(removedTool));
+    }
   }
-  assert.match(errorText, /not found|unknown tool/i);
-  assert.ok(errorText.includes(removedTool));
   assert.equal(readFileSync(tokenPath, 'utf8'), tokens);
   assert.equal(readFileSync(networkLog, 'utf8'), '');
 }
@@ -145,7 +150,7 @@ try {
     child.kill('SIGTERM');
     await exited;
   }
-  console.log('Auth boundary passed: HTTP fails closed, rejects unauthenticated MCP access, and permits authenticated clients; revocation remains unavailable on both transports.');
+  console.log('Auth boundary passed: HTTP fails closed, rejects unauthenticated MCP access, and permits authenticated clients; revocation and code exchange remain unavailable on both transports.');
 } finally {
   rmSync(home, { recursive: true, force: true });
 }

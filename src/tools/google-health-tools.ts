@@ -17,8 +17,6 @@ import {
   DataPointsInputSchema,
   DataTypeCatalogOutputSchema,
   EndpointDataOutputSchema,
-  ExchangeCodeInputSchema,
-  ExchangeCodeOutputSchema,
   GetDataPointInputSchema,
   PairedDevicesInputSchema,
   PrivacyAuditOutputSchema,
@@ -179,7 +177,7 @@ export function registerGoogleHealthTools(server: McpServer): void {
         title: hasToken ? "(done) Local token present — ready to read Google Health data" : "Run the OAuth dance",
         action: hasToken
           ? "Tokens stored under ~/.google-health-mcp/tokens.json. The connector will refresh automatically when needed."
-          : "Run `google-health-fitbit-mcp-server auth` (or call google_health_get_auth_url + google_health_exchange_code from the agent). Open the URL, grant access, paste the code.",
+          : "Run `google-health-fitbit-mcp-server auth` in a local terminal and approve access in the browser.",
         done: hasToken,
       },
       {
@@ -272,7 +270,7 @@ export function registerGoogleHealthTools(server: McpServer): void {
 
   server.registerTool("google_health_get_auth_url", {
     title: "Get Google Health OAuth URL",
-    description: "Generate a Google OAuth authorization URL for Google Health API. Use this first when no local token exists.",
+    description: "Preview a Google OAuth authorization URL for Google Health API. To connect an account, run the local auth CLI; MCP cannot exchange authorization codes.",
     inputSchema: AuthUrlInputSchema.shape,
     outputSchema: AuthUrlOutputSchema.shape,
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false }
@@ -284,25 +282,9 @@ export function registerGoogleHealthTools(server: McpServer): void {
         auth_url: url,
         redirect_uri: config.redirectUri,
         scopes: params.scopes?.length ? params.scopes : config.scopes,
-        next_step: "Open auth_url, approve access, then pass the returned code or full redirect URL to google_health_exchange_code."
+        next_step: "Run `google-health-fitbit-mcp-server auth` in a local terminal. It opens its own authorization URL and validates the callback state before storing tokens."
       };
       return makeResponse(output, params.response_format, bulletList("Google Health OAuth URL", output));
-    } catch (error) {
-      return makeError((error as Error).message);
-    }
-  });
-
-  server.registerTool("google_health_exchange_code", {
-    title: "Exchange Google Health OAuth Code",
-    description: "Exchange a Google OAuth authorization code for local tokens. Tokens are stored locally with 0600 permissions and are never returned. Gated: requires explicit user intent — agents must not call this autonomously.",
-    inputSchema: ExchangeCodeInputSchema.shape,
-    outputSchema: ExchangeCodeOutputSchema.shape,
-    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true }
-  }, async (params) => {
-    try {
-      const result = await client().exchangeCode(params.code);
-      const output = { ...result, note: "Token values were stored locally and intentionally omitted from this response." };
-      return makeResponse(output, params.response_format, bulletList("Google Health OAuth Exchange", output));
     } catch (error) {
       return makeError((error as Error).message);
     }

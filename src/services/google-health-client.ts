@@ -241,7 +241,7 @@ export class GoogleHealthClient {
   private async readOrRefreshToken(): Promise<GoogleHealthTokenSet> {
     const tokens = await this.tokenStore.read();
     if (!tokens?.access_token) {
-      throw new Error("Google Health token not found. Run google-health-fitbit-mcp-server auth, or use google_health_get_auth_url then google_health_exchange_code.");
+      throw new Error("Google Health token not found. Run google-health-fitbit-mcp-server auth in a local terminal.");
     }
     const expiresAt = tokens.expires_at ?? 0;
     const shouldRefresh = Boolean(tokens.refresh_token && expiresAt && expiresAt - Math.floor(Date.now() / 1000) < 300);
@@ -280,7 +280,7 @@ export class GoogleHealthClient {
     }
     throw new Error(
       `${error.message} Automatic re-authorization did not run (${outcome.reason}). ` +
-      "Run `google-health-fitbit-mcp-server auth`, or call google_health_get_auth_url then google_health_exchange_code."
+      "Run `google-health-fitbit-mcp-server auth` in a local terminal."
     );
   }
 

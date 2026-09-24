@@ -162,7 +162,7 @@ which device is producing my sleep and heart-rate data.
 
 Account disconnection is outside MCP: no tool can revoke the OAuth grant or delete the account token file. Manage revocation through your Google account and local credential deletion manually outside this server. Existing authorization, reauthorization, and token refresh remain available. After upgrading, restart the server and refresh the harness tool catalog.
 
-28 tools, including local-profile updates and OAuth code exchange. Code exchange can replace stored credentials; its description requests explicit user intent but does not enforce a confirmation gate.
+27 tools, including local-profile updates. OAuth code exchange is unavailable through MCP. Run `google-health-fitbit-mcp-server auth` in a local terminal to connect or change accounts. Restart the rebuilt server and refresh your harness tool catalog after upgrading.
 
 ### Start here
 
@@ -199,7 +199,7 @@ Account disconnection is outside MCP: no tool can revoke the OAuth grant or dele
 
 ### Auth, diagnostics & metadata
 
-`google_health_get_auth_url` · `google_health_exchange_code` (stores credentials; description-only user-intent policy) · `google_health_privacy_audit` · `google_health_cache_status` · `google_health_data_type_coverage` · `google_health_capabilities` · `google_health_agent_manifest` · `google_health_onboarding` · `google_health_profile_get` · `google_health_profile_update` (local file only, requires `explicit_user_intent=true`)
+`google_health_get_auth_url` · `google_health_privacy_audit` · `google_health_cache_status` · `google_health_data_type_coverage` · `google_health_capabilities` · `google_health_agent_manifest` · `google_health_onboarding` · `google_health_profile_get` · `google_health_profile_update` (local file only, requires `explicit_user_intent=true`)
 
 ### Resources & prompts
 
