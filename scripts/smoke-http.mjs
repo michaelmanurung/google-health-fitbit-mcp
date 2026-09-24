@@ -1,12 +1,13 @@
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import http from 'node:http';
+import { randomBytes } from 'node:crypto';
 
 const port = String(43000 + Math.floor(Math.random() * 1000));
 const healthCheckAttempts = 100;
 const healthCheckDelayMs = 200;
 const child = spawn(process.execPath, ['dist/index.js', '--http'], {
-  env: { ...process.env, GOOGLE_HEALTH_MCP_PORT: port, GOOGLE_HEALTH_MCP_HOST: '127.0.0.1' },
+  env: { ...process.env, GOOGLE_HEALTH_MCP_PORT: port, GOOGLE_HEALTH_MCP_HOST: '127.0.0.1', GOOGLE_HEALTH_MCP_AUTH_TOKEN: randomBytes(32).toString('base64url') },
   stdio: ['ignore', 'ignore', 'pipe']
 });
 

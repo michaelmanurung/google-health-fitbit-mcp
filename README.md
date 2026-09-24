@@ -309,8 +309,14 @@ Once the config changes, run `/reload-mcp` or `hermes mcp test google_health` â€
 The default transport is stdio. A local Streamable-HTTP transport is available for clients that need it:
 
 ```bash
-npx -y google-health-fitbit-mcp --http   # serves http://127.0.0.1:3000/mcp (+ /health)
+export GOOGLE_HEALTH_MCP_AUTH_TOKEN="$(openssl rand -base64 32 | tr '+/' '-_' | tr -d '=\n')"
+npm run build
+node dist/index.js --http   # serves http://127.0.0.1:3000/mcp (+ /health)
 ```
+
+Configure the HTTP MCP client to send `Authorization: Bearer <GOOGLE_HEALTH_MCP_AUTH_TOKEN>` on every request. Use the same generated secret on the client and server; do not use a Google OAuth token. HTTP startup fails if the secret is missing or is not at least 43 base64url characters. Existing HTTP clients must add this header after upgrading. Stdio does not require this secret.
+
+The secret grants access to all tools and resources for the server's account. Keep it private and rotate it by replacing it and restarting the server and clients. `/health` remains public and returns only service metadata. Browser requests must match `GOOGLE_HEALTH_MCP_ALLOWED_ORIGIN`; CORS preflights do not require authentication. For remote access, use an HTTPS reverse proxy and firewall the backend so it is reachable only by the proxy; the built-in listener uses plaintext HTTP. This is a single-owner shared-secret transport, not a multi-user OAuth service.
 
 ## Configuration
 
@@ -326,6 +332,8 @@ npx -y google-health-fitbit-mcp --http   # serves http://127.0.0.1:3000/mcp (+ /
 | `GOOGLE_HEALTH_NO_CACHE` | Bypass the in-memory HTTP cache (60s TTL, GET-only) | unset |
 | `GOOGLE_HEALTH_MCP_TRANSPORT` | `stdio` \| `http` | `stdio` |
 | `GOOGLE_HEALTH_MCP_HOST` / `GOOGLE_HEALTH_MCP_PORT` | HTTP transport bind address | `127.0.0.1` / `3000` |
+| `GOOGLE_HEALTH_MCP_AUTH_TOKEN` | Required HTTP bearer secret; generate 32 random bytes as base64url | unset (HTTP refuses startup) |
+| `GOOGLE_HEALTH_MCP_ALLOWED_ORIGIN` | Exact permitted browser origin for HTTP MCP requests | `http://<host>:<port>` |
 | `GOOGLE_HEALTH_AUTO_REAUTH` | Reopen the consent flow automatically when the grant is revoked (`0`/`false` to disable) | enabled |
 | `GOOGLE_HEALTH_REAUTH_WAIT_MS` | How long a tool call waits for you to approve before returning the URL instead | `45000` |
 | `GOOGLE_HEALTH_AUTH_NO_BROWSER` | Never launch a browser; print/return the URL only (headless hosts) | unset |

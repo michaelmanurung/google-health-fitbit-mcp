@@ -9,6 +9,7 @@ import { runCliCommand } from "./cli/commands.js";
 import { registerGoogleHealthPrompts } from "./prompts/google-health-prompts.js";
 import { registerGoogleHealthResources } from "./resources/google-health-resources.js";
 import { registerGoogleHealthTools } from "./tools/google-health-tools.js";
+import { createHttpAuth } from "./services/http-auth.js";
 
 function createServer(): McpServer {
   const server = new McpServer({
@@ -29,13 +30,25 @@ async function runStdio(): Promise<void> {
 }
 
 async function runHttp(): Promise<void> {
+  // Validate before opening a listener, including when binding to loopback.
+  const authenticate = createHttpAuth();
   const app = express();
   const host = process.env.GOOGLE_HEALTH_MCP_HOST ?? "127.0.0.1";
   const port = Number(process.env.GOOGLE_HEALTH_MCP_PORT ?? 3000);
   const allowedOrigin = process.env.GOOGLE_HEALTH_MCP_ALLOWED_ORIGIN ?? `http://${host}:${port}`;
 
-  app.use(express.json({ limit: "1mb" }));
+  // CORS preflights carry no credential and cannot dispatch MCP operations.
+  app.use("/mcp", (req, res, next) => {
+    if (req.headers.origin && req.headers.origin !== allowedOrigin) {
+      res.status(403).json({ error: "Forbidden origin" });
+      return;
+    }
+    next();
+  });
   app.use(cors({ origin: allowedOrigin }));
+  // Protect every MCP method before parsing input or creating a server.
+  app.use("/mcp", authenticate);
+  app.use(express.json({ limit: "1mb" }));
 
   app.get("/health", (_req, res) => {
     res.json({ ok: true, name: SERVER_NAME, version: SERVER_VERSION });

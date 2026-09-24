@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
+import { randomBytes } from 'node:crypto';
 import { once } from 'node:events';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -41,6 +42,7 @@ Object.assign(env, {
   GOOGLE_HEALTH_AUTO_REAUTH: 'false'
 });
 const args = ['--import', pathToFileURL(guardPath).href, 'dist/index.js'];
+const httpToken = randomBytes(32).toString('base64url');
 
 async function checkBoundary(client) {
   const { tools } = await client.listTools();
@@ -67,6 +69,18 @@ async function checkBoundary(client) {
 }
 
 try {
+  for (const host of ['127.0.0.1', '0.0.0.0']) {
+    for (const token of ['', 'short', ' '.repeat(43)]) {
+      const result = spawnSync(process.execPath, [...args, '--http'], {
+        env: { ...env, GOOGLE_HEALTH_MCP_HOST: host, GOOGLE_HEALTH_MCP_PORT: '0', GOOGLE_HEALTH_MCP_AUTH_TOKEN: token },
+        encoding: 'utf8', timeout: 10000
+      });
+      assert.equal(result.error, undefined);
+      assert.notEqual(result.status, 0);
+      assert.match(result.stderr, /HTTP transport requires GOOGLE_HEALTH_MCP_AUTH_TOKEN/);
+      assert.ok(!result.stderr.includes('AUTH_TEST_PORT='), 'Invalid auth config must never open a listener');
+    }
+  }
   const stdio = new Client({ name: 'auth-boundary-stdio', version: '0.0.0' });
   try {
     await stdio.connect(new StdioClientTransport({ command: process.execPath, args, env }));
@@ -77,7 +91,7 @@ try {
 
   // Port 0 lets the OS choose a free port, avoiding conflicts with other tests.
   const child = spawn(process.execPath, [...args, '--http'], {
-    env: { ...env, GOOGLE_HEALTH_MCP_PORT: '0', GOOGLE_HEALTH_MCP_HOST: '127.0.0.1' },
+    env: { ...env, GOOGLE_HEALTH_MCP_PORT: '0', GOOGLE_HEALTH_MCP_HOST: '127.0.0.1', GOOGLE_HEALTH_MCP_AUTH_TOKEN: httpToken },
     stdio: ['ignore', 'ignore', 'pipe']
   });
   const exited = once(child, 'exit');
@@ -96,14 +110,42 @@ try {
       child.once('error', (error) => { clearTimeout(timer); reject(error); });
       child.once('exit', () => { clearTimeout(timer); reject(new Error(`HTTP exited: ${stderr}`)); });
     });
-    await httpClient.connect(new StreamableHTTPClientTransport(url));
+    for (const authorization of [undefined, 'Bearer wrong', `Basic ${httpToken}`, `Bearer ${httpToken}extra`]) {
+      for (const method of ['GET', 'POST', 'DELETE']) {
+        const response = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json', ...(authorization ? { Authorization: authorization } : {}) },
+          // Malformed JSON proves authentication happens before body parsing.
+          ...(method === 'POST' ? { body: '{' } : {})
+        });
+        assert.equal(response.status, 401);
+        assert.equal(response.headers.get('www-authenticate'), 'Bearer realm="google-health-mcp"');
+        assert.deepEqual(await response.json(), { error: 'Unauthorized' });
+      }
+    }
+    for (const method of ['tools/call', 'resources/read']) {
+      const response = await fetch(url, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params: { name: 'google_health_exchange_code', arguments: { code: 'untrusted' } } })
+      });
+      assert.equal(response.status, 401);
+      await response.text();
+    }
+    const forbidden = await fetch(url, { method: 'POST', headers: { Authorization: `Bearer ${httpToken}`, Origin: 'https://untrusted.example' } });
+    assert.equal(forbidden.status, 403);
+    await forbidden.text();
+    const preflight = await fetch(url, { method: 'OPTIONS' });
+    assert.equal(preflight.status, 204);
+    assert.equal(readFileSync(tokenPath, 'utf8'), tokens);
+    assert.equal(readFileSync(networkLog, 'utf8'), '');
+    await httpClient.connect(new StreamableHTTPClientTransport(url, { requestInit: { headers: { Authorization: `Bearer ${httpToken}` } } }));
     await checkBoundary(httpClient);
   } finally {
     await httpClient.close();
     child.kill('SIGTERM');
     await exited;
   }
-  console.log('Auth boundary passed: stdio and HTTP reject revocation without credential changes or outbound fetches.');
+  console.log('Auth boundary passed: HTTP fails closed, rejects unauthenticated MCP access, and permits authenticated clients; revocation remains unavailable on both transports.');
 } finally {
   rmSync(home, { recursive: true, force: true });
 }
