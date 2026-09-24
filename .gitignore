@@ -6,6 +6,7 @@ dist/
 .DS_Store
 coverage/
 .strava-mcp/
+.venv/
 
 # MCP Registry local auth tokens
 .mcpregistry_*_token
