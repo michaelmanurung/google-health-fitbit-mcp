@@ -14,7 +14,7 @@ const expectedTools = [
   'google_health_get_settings', 'google_health_list_data_points', 'google_health_list_data_types',
   'google_health_list_paired_devices', 'google_health_onboarding',
   'google_health_privacy_audit', 'google_health_profile_get', 'google_health_profile_update', 'google_health_quickstart',
-  'google_health_reconcile_data_points', 'google_health_revoke_access', 'google_health_rollup',
+  'google_health_reconcile_data_points', 'google_health_rollup',
   'google_health_weekly_summary', 'google_health_wellness_context'
 ];
 

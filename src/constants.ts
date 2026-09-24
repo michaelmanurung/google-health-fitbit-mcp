@@ -6,7 +6,6 @@ export const PINNED_NPM_PACKAGE = `${NPM_PACKAGE_NAME}@${SERVER_VERSION}`;
 export const GOOGLE_HEALTH_API_BASE_URL = "https://health.googleapis.com";
 export const GOOGLE_HEALTH_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
 export const GOOGLE_HEALTH_TOKEN_URL = "https://oauth2.googleapis.com/token";
-export const GOOGLE_HEALTH_REVOKE_URL = "https://oauth2.googleapis.com/revoke";
 
 export const DEFAULT_SCOPES = [
   "https://www.googleapis.com/auth/googlehealth.profile.readonly",

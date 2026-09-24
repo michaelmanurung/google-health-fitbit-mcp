@@ -16,6 +16,7 @@ Guidelines:
 - Treat GPS data as sensitive.
 - Do not add write/upload tools without explicit safety gates.
 - Do not log or return OAuth tokens.
+- Do not expose MCP tools that revoke OAuth grants, disconnect accounts, or delete account credentials, including aliases or opt-in variants. These operations belong outside MCP.
 - Update docs and tests with behavior changes.
 
 ## Planned: nutrition write

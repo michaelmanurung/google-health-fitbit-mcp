@@ -2,7 +2,6 @@ import { URL, URLSearchParams } from "node:url";
 import {
   DEFAULT_LIMIT,
   GOOGLE_HEALTH_AUTH_URL,
-  GOOGLE_HEALTH_REVOKE_URL,
   GOOGLE_HEALTH_TOKEN_URL,
   MAX_GOOGLE_HEALTH_LIMIT,
   SERVER_VERSION
@@ -161,18 +160,6 @@ export class GoogleHealthClient {
   // see CONTRIBUTING.md → "Planned: nutrition write" before wiring this to a real Google endpoint.
   async createNutritionDataPoint(body: Record<string, unknown>): Promise<unknown> {
     return this.post(`/v4/users/me/dataTypes/${encodeDataType(NUTRITION_DATA_TYPE)}/dataPoints`, body);
-  }
-
-  async revokeAccess(): Promise<{ ok: true; token_path: string; local_tokens_cleared: boolean }> {
-    const token = await this.getValidToken();
-    const response = await this.fetchWithRetry(GOOGLE_HEALTH_REVOKE_URL, {
-      method: "POST",
-      headers: this.formHeaders(),
-      body: new URLSearchParams({ token: token.refresh_token ?? token.access_token }).toString()
-    });
-    await this.parseResponse(response);
-    await this.tokenStore.withLock(async () => this.tokenStore.clear());
-    return { ok: true, token_path: this.config.tokenPath, local_tokens_cleared: true };
   }
 
   cacheStatus(): CacheStatus {

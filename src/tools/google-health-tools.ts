@@ -24,7 +24,6 @@ import {
   PrivacyAuditOutputSchema,
   ReconcileInputSchema,
   ResponseOnlyInputSchema,
-  RevokeAccessOutputSchema,
   RollupInputSchema,
   SimpleReadInputSchema,
   SummaryOutputSchema,
@@ -525,22 +524,6 @@ export function registerGoogleHealthTools(server: McpServer): void {
   }, async ({ response_format }) => {
     const audit = buildPrivacyAudit();
     return makeResponse(audit, response_format, bulletList("Google Health Privacy Audit", audit));
-  });
-
-  server.registerTool("google_health_revoke_access", {
-    title: "Revoke Google Health OAuth Access",
-    description: "Revoke the current Google OAuth grant and delete the local token file. Use only when the user explicitly wants to disconnect Google Health. Gated: requires explicit user intent — agents must not call this autonomously.",
-    inputSchema: ResponseOnlyInputSchema.shape,
-    outputSchema: RevokeAccessOutputSchema.shape,
-    annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: true }
-  }, async ({ response_format }) => {
-    try {
-      const result = await client().revokeAccess();
-      const output = { ...result, note: "Google Health access was revoked and local tokens were removed. Re-authorize before future API calls." };
-      return makeResponse(output, response_format, bulletList("Google Health Access Revoked", output));
-    } catch (error) {
-      return makeError((error as Error).message);
-    }
   });
 
   server.registerTool("google_health_daily_summary", {

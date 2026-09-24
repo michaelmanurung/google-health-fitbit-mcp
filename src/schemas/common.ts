@@ -178,13 +178,6 @@ export const CacheStatusOutputSchema = z.object({
   }).strict().optional()
 }).strict();
 
-export const RevokeAccessOutputSchema = z.object({
-  ok: z.boolean(),
-  token_path: z.string(),
-  local_tokens_cleared: z.boolean(),
-  note: z.string()
-}).strict();
-
 export const PrivacyAuditOutputSchema = z.object({
   project: z.string(),
   unofficial: z.boolean(),

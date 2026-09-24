@@ -38,7 +38,6 @@ const STANDARD_TOOLS = [
   "google_health_profile_update",
   "google_health_quickstart",
   "google_health_reconcile_data_points",
-  "google_health_revoke_access",
   "google_health_rollup",
   "google_health_weekly_summary",
   "google_health_wellness_context"
