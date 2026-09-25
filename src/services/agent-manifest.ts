@@ -27,10 +27,10 @@ const STANDARD_TOOLS = [
   "google_health_get_irn_profile",
   "google_health_get_profile",
   "google_health_get_settings",
-  // Add "log_nutrition" here (alphabetical) when the planned write tool ships — see CONTRIBUTING.md.
   "google_health_list_data_points",
   "google_health_list_data_types",
   "google_health_list_paired_devices",
+  "google_health_log_nutrition",
   "google_health_onboarding",
   "google_health_privacy_audit",
   "google_health_profile_get",
@@ -89,10 +89,10 @@ export function buildAgentManifest(client: AgentClientName = "generic") {
     standard_tools: STANDARD_TOOLS,
     resources: RESOURCES,
     mutating_tools: {
-      enabled: false, // FOUNDATION present, tool not yet registered
+      enabled: true,
       write_scope: GOOGLE_HEALTH_NUTRITION_WRITE_SCOPE,
       scope_preset: "nutrition-write",
-      policy: "Opt-in only. Requires explicit_user_intent=true and defaults to dry-run."
+      policy: "Preview first; live write requires a matching preview fingerprint, explicit_user_intent=true, and the nutrition write scope."
     },
     hermes: {
       config_path: "~/.hermes/config.yaml",
@@ -113,7 +113,7 @@ export function buildAgentManifest(client: AgentClientName = "generic") {
       "Use data types in kebab case in endpoint tools, and snake_case names in filter expressions.",
       "For Hermes, do not restart the gateway for normal Google Health data access; reload MCP instead.",
       "Do not provide medical diagnosis or treatment instructions. Frame outputs as health/training context.",
-      "Nutrition logging is a mutating, opt-in tool requiring explicit_user_intent=true, the nutrition-write scope, and dry-run-by-default. It is not enabled until the log_nutrition tool ships."
+      "For meal photos, estimate per-food amounts and nutrients in the chat host, preview with google_health_log_nutrition, show the user the estimate, and write only after explicit confirmation using the matching fingerprint."
     ],
     troubleshooting: [
       { symptom: "missing GOOGLE_HEALTH_CLIENT_ID / GOOGLE_HEALTH_CLIENT_SECRET / GOOGLE_HEALTH_REDIRECT_URI", action: "Run `google-health-fitbit-mcp-server setup` or set GOOGLE_HEALTH_* env vars after enabling Google Health API in Google Cloud." },

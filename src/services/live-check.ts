@@ -66,8 +66,7 @@ export async function runLiveCheck(status: ConnectionStatus, homeDir?: string, l
 //   - liveWrite === false: a plain `checkup --live` does not exercise the write path. We report
 //     ok:true if the scope is present (the write rail is ready), else a skip-style message.
 //   - liveWrite === true: build the canonical body from a fixed deterministic sample
-//     (100g banana) and validate its shape, then STOP before POST. (TO-VERIFY: a real POST is
-//     only safe once Google exposes a validateOnly param — see google-v4-nutrition-datapoint.ts.)
+//     (100g banana) and validate its shape, then STOP before POST.
 function buildNutritionDryRunCheck(scopeGranted: boolean, liveWrite: boolean): LiveEndpointCheck {
   if (!liveWrite) {
     return scopeGranted ? { ok: true } : { ok: false, error: "dry-run not requested (use --live-write)" };
@@ -79,12 +78,11 @@ function buildNutritionDryRunCheck(scopeGranted: boolean, liveWrite: boolean): L
     // Deterministic sample: 100g banana per-100g values (matches nutrition-normalize defaults).
     const body = buildNutritionDataPointBody({
       nutrients: { calories_kcal: 89, protein_g: 1.09, carbohydrates_g: 22.84, fat_g: 0.33, fiber_g: 2.6, sugar_g: 12.23 },
-      food_name: "banana",
-      meal_type: "snack"
-    });
-    const valid = body && typeof body === "object" && typeof (body as Record<string, unknown>).dataPoint === "object";
+      food_name: "banana", amount_g: 100
+    }, { meal_type: "snack", eaten_at: "2026-06-16T12:00:00Z" });
+    const valid = body && typeof body === "object" && typeof (body as Record<string, unknown>).nutritionLog === "object";
     // STOP before POST. The body is validated, never sent.
-    return valid ? { ok: true, error: "dry-run only — validated body, no POST (envelope TO-VERIFY)" } : { ok: false, error: "body validation failed" };
+    return valid ? { ok: true, error: "dry-run only — validated body, no POST" } : { ok: false, error: "body validation failed" };
   } catch (error) {
     return { ok: false, error: redactErrorMessage((error as Error).message) };
   }

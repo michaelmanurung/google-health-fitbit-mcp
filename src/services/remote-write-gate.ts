@@ -1,11 +1,10 @@
 // Shared remote-write precondition gate for opt-in mutating tools (nutrition logging, etc.).
 //
-// SEAM: the community log_nutrition tool calls checkRemoteWriteGate() first, then
-// isLiveWriteAuthorized() to decide dry-run vs POST. See the seam comment at the end of
-// registerGoogleHealthTools() in src/tools/google-health-tools.ts.
+// The nutrition tool calls checkRemoteWriteGate() on live writes. Preview is local and
+// does not need OAuth or explicit user intent.
 //
 // This module intentionally has ZERO new dependencies — it imports only format.ts + types.ts +
-// the single-source-of-truth write-scope constant from constants.ts. No tool is registered here.
+// the single-source-of-truth write-scope constant from constants.ts.
 
 import { GOOGLE_HEALTH_NUTRITION_WRITE_SCOPE } from "../constants.js";
 import type { ResponseFormat } from "../types.js";

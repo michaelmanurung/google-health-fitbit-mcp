@@ -42,18 +42,29 @@ export const ConnectionStatusInputSchema = z.object({
   response_format: ResponseFormatSchema
 }).strict();
 
-// Typed input contract for the planned (not-yet-registered) log_nutrition write tool. Defined now
-// so the write gate, nutrient normalizer and DataPoint mapper share one contract. Reuse this
-// schema when the tool ships. See CONTRIBUTING.md → "Planned: nutrition write".
+const NutrientAmountSchema = z.number().finite().min(0).max(100000);
+const NutritionItemSchema = z.object({
+  food_name: z.string().trim().min(1).max(200),
+  amount_g: z.number().finite().positive().max(100000),
+  nutrients: z.object({
+    calories_kcal: NutrientAmountSchema,
+    protein_g: NutrientAmountSchema,
+    carbohydrates_g: NutrientAmountSchema,
+    fat_g: NutrientAmountSchema,
+    fiber_g: NutrientAmountSchema.optional(),
+    sugar_g: NutrientAmountSchema.optional(),
+    saturated_fat_g: NutrientAmountSchema.optional(),
+    sodium_mg: NutrientAmountSchema.optional()
+  }).strict()
+}).strict();
+
 export const LogNutritionInputSchema = z.object({
-  // free-text path OR explicit nutrients/food
-  text: z.string().max(1000).optional().describe("Free-text meal, e.g. '2 ovos e 100g de arroz'. Resolved offline via estimateMeal."),
-  food_name: z.string().max(200).optional(),
+  items: z.array(NutritionItemSchema).min(1).max(20).describe("Foods estimated from a photo by the chat host. Nutrients are totals for each estimated portion, not per 100 g."),
   meal_type: z.enum(["breakfast", "lunch", "dinner", "snack", "other"]).optional(),
-  start_time: DateTimeSchema.optional(),
-  end_time: DateTimeSchema.optional(),
+  eaten_at: DateTimeSchema.describe("Meal time with timezone; host supplies current time if user does not specify one."),
   dry_run: z.boolean().default(true).describe("Default true. When true, validates and returns the would-be DataPoint body without POSTing."),
-  explicit_user_intent: z.boolean().optional().describe("Must be true to persist a live write."),
+  preview_fingerprint: z.string().regex(/^[a-f0-9]{64}$/).optional().describe("Fingerprint returned by preview; required for a live write."),
+  explicit_user_intent: z.boolean().optional().describe("Must be true after the user confirms the preview to persist a live write."),
   response_format: ResponseFormatSchema
 }).strict();
 
@@ -200,12 +211,10 @@ export const CapabilitiesOutputSchema = z.object({
   client_aliases: z.record(z.string(), z.unknown()),
   contribution_paths: z.array(z.string()),
   links: z.record(z.string(), z.string()),
-  // Opt-in write-tool policy (FOUNDATION). Declared explicitly because the MCP SDK emits
-  // additionalProperties:false for the registered output schema even on .passthrough() zod schemas.
   mutating_tools: z.object({
     policy: z.string(),
     scope_preset: z.string(),
-    planned: z.array(z.string())
+    available: z.array(z.string())
   }).strict().optional()
 }).passthrough();
 

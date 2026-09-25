@@ -154,12 +154,8 @@ export class GoogleHealthClient {
     });
   }
 
-  // Mutating create for nutrition DataPoints; reuses the post → request plumbing (auth refresh,
-  // retry, cleanObject, redaction; POST is never cached). Only invoked by the planned log_nutrition
-  // tool when a live write is authorized. The verb/path and data-type slug are still unverified —
-  // see CONTRIBUTING.md → "Planned: nutrition write" before wiring this to a real Google endpoint.
   async createNutritionDataPoint(body: Record<string, unknown>): Promise<unknown> {
-    return this.post(`/v4/users/me/dataTypes/${encodeDataType(NUTRITION_DATA_TYPE)}/dataPoints`, body);
+    return this.request("POST", `/v4/users/me/dataTypes/${encodeDataType(NUTRITION_DATA_TYPE)}/dataPoints`, body, undefined, true);
   }
 
   cacheStatus(): CacheStatus {
@@ -196,14 +192,14 @@ export class GoogleHealthClient {
     }
   }
 
-  private async request(method: "GET" | "POST", path: string, body?: Record<string, unknown>, params?: Record<string, string | number | boolean | undefined>): Promise<unknown> {
+  private async request(method: "GET" | "POST", path: string, body?: Record<string, unknown>, params?: Record<string, string | number | boolean | undefined>, noRetry = false): Promise<unknown> {
     const token = await this.getValidToken();
     const url = this.buildUrl(path, params);
     const response = await this.fetchWithRetry(url, {
       method,
       headers: this.jsonHeaders(token.access_token),
       body: body ? JSON.stringify(cleanObject(body)) : undefined
-    });
+    }, noRetry);
 
     if (response.status === 401) {
       const refreshed = await this.forceRefresh();
@@ -211,7 +207,7 @@ export class GoogleHealthClient {
         method,
         headers: this.jsonHeaders(refreshed.access_token),
         body: body ? JSON.stringify(cleanObject(body)) : undefined
-      });
+      }, noRetry);
       return this.parseAndCache(method, url, retry);
     }
 
@@ -377,11 +373,11 @@ export class GoogleHealthClient {
     return this.cache;
   }
 
-  private async fetchWithRetry(url: string, init: RequestInit): Promise<Response> {
+  private async fetchWithRetry(url: string, init: RequestInit, noRetry = false): Promise<Response> {
     return fetchWithCache(url, init, {
       defaultTtlSeconds: 60,
       envVarBypass: "GOOGLE_HEALTH_NO_CACHE",
-      innerFetch: (u, i) => fetchWithRetry(u, i ?? {})
+      innerFetch: (u, i) => fetchWithRetry(u, i ?? {}, { noRetry })
     });
   }
 }

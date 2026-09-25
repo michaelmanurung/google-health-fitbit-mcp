@@ -37,7 +37,7 @@ export function buildCapabilities() {
     mutating_tools: {
       policy: "Write tools are opt-in, require explicit_user_intent=true, default to dry-run, and need the nutrition write scope.",
       scope_preset: "nutrition-write",
-      planned: ["log_nutrition"] // FOUNDATION ONLY — tool not yet shipped
+      available: ["google_health_log_nutrition"]
     },
     privacy_modes: [
       { mode: "summary", use_when: "Default-safe interpretation with identifiers and source details minimized." },
@@ -79,7 +79,7 @@ export function buildCapabilities() {
       "Add real-account fixture coverage as Google Health stabilizes.",
       "Add source-family-specific UX for Pixel Watch, Fitbit and Google first-party sources.",
       "Add webhook/subscriber support after read-only flows are proven.",
-      "Add optional write tools only behind explicit opt-in and safety gates."
+      "Extend nutrition writes only behind explicit opt-in and safety gates."
     ],
     links: {
       github: "https://github.com/BerkKilicoglu/google-health-fitbit-mcp",

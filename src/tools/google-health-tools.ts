@@ -18,6 +18,7 @@ import {
   DataTypeCatalogOutputSchema,
   EndpointDataOutputSchema,
   GetDataPointInputSchema,
+  LogNutritionInputSchema,
   PairedDevicesInputSchema,
   PrivacyAuditOutputSchema,
   ReconcileInputSchema,
@@ -50,6 +51,9 @@ import {
 } from "../services/profile-store.js";
 import { buildDailySummary, buildWeeklySummary, formatSummaryMarkdown } from "../services/summary.js";
 import { GoogleHealthClient } from "../services/google-health-client.js";
+import { buildNutritionDataPointBody, nutritionPreviewFingerprint } from "../services/google-v4-nutrition-datapoint.js";
+import { addNutrients } from "../services/nutrition-normalize.js";
+import { checkRemoteWriteGate } from "../services/remote-write-gate.js";
 
 type PrivacyMode = "summary" | "structured" | "raw";
 type ResponseFormat = "markdown" | "json";
@@ -669,8 +673,67 @@ export function registerGoogleHealthTools(server: McpServer): void {
     }
   );
 
-  // The planned log_nutrition WRITE tool registers here. It is intentionally not shipped yet; the
-  // supporting rails (input schema, write gate, nutrient normalizer, DataPoint builder, client
-  // method) already exist. See CONTRIBUTING.md → "Planned: nutrition write" for the wiring plan and
-  // the open TO-VERIFY items before enabling a live POST.
+  server.registerTool("google_health_log_nutrition", {
+    title: "Log Nutrition",
+    description: "Preview estimated foods and nutrients from a meal photo, then log one nutrition entry per food after the user confirms the exact preview. The chat host analyzes the photo. Preview is the default and never calls Google. Live writing needs the nutrition-write scope, matching preview_fingerprint, dry_run=false, and explicit_user_intent=true after user confirmation. Do not infer confirmation from the photo alone.",
+    inputSchema: LogNutritionInputSchema.shape,
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true }
+  }, async (params) => {
+    const meal = { items: params.items, meal_type: params.meal_type, eaten_at: params.eaten_at };
+    const fingerprint = nutritionPreviewFingerprint(meal);
+    const bodies = params.items.map((item) => buildNutritionDataPointBody(item, meal));
+    const total = addNutrients(params.items.map((item) => item.nutrients));
+    if (params.dry_run) {
+      const preview = {
+        ok: true, status: "preview", preview_fingerprint: fingerprint, eaten_at: params.eaten_at,
+        meal_type: params.meal_type, items: params.items, total_nutrients: total, data_point_bodies: bodies,
+        next_step: "Show this estimate to the user. After explicit confirmation, repeat the same input with dry_run=false, explicit_user_intent=true, and this preview_fingerprint."
+      };
+      return makeResponse(preview, params.response_format, bulletList("Nutrition Preview", preview));
+    }
+
+    const status = await buildConnectionStatus();
+    const refusal = checkRemoteWriteGate({
+      dry_run: false,
+      explicit_user_intent: params.explicit_user_intent,
+      granted_scopes: status.oauth.granted_scopes
+    }, { response_format: params.response_format, title: "Log Nutrition" });
+    if (refusal) return refusal;
+    if (params.preview_fingerprint !== fingerprint) {
+      const mismatch = { ok: false, error: "PREVIEW_MISMATCH", message: "Preview the exact meal again and confirm it before writing." };
+      return makeResponse(mismatch, params.response_format, bulletList("Log Nutrition", mismatch));
+    }
+
+    const results: Array<{ index: number; food_name: string; status: string; resource_name?: string; operation_name?: string; error?: string }> = [];
+    for (const [index, body] of bodies.entries()) {
+      const food_name = params.items[index]!.food_name;
+      try {
+        const operation = await client().createNutritionDataPoint(body) as Record<string, unknown>;
+        const response = operation.response && typeof operation.response === "object" ? operation.response as Record<string, unknown> : undefined;
+        if (operation.done === true && response && typeof response.name === "string") {
+          results.push({ index, food_name, status: "confirmed", resource_name: response.name });
+        } else if (operation.done === true && operation.error) {
+          results.push({ index, food_name, status: "failed", error: JSON.stringify(operation.error) });
+          break;
+        } else {
+          results.push({ index, food_name, status: "pending_or_unknown", operation_name: typeof operation.name === "string" ? operation.name : undefined });
+          break;
+        }
+      } catch (error) {
+        results.push({ index, food_name, status: "unconfirmed", error: (error as Error).message });
+        break;
+      }
+    }
+    const confirmed = results.filter((result) => result.status === "confirmed").length;
+    const outcome = {
+      ok: confirmed === params.items.length,
+      status: confirmed === params.items.length ? "complete" : "partial_or_unconfirmed",
+      confirmed_count: confirmed,
+      total_count: params.items.length,
+      results,
+      remaining_indices: params.items.map((_, index) => index).slice(results.length),
+      message: confirmed === params.items.length ? "All food entries were confirmed by Google." : "Some entries were not confirmed. Check Google Health before retrying an unconfirmed item."
+    };
+    return makeResponse(outcome, params.response_format, bulletList("Log Nutrition", outcome));
+  });
 }

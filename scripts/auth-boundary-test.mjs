@@ -46,7 +46,7 @@ const httpToken = randomBytes(32).toString('base64url');
 
 async function checkBoundary(client) {
   const { tools } = await client.listTools();
-  assert.equal(tools.length, 27);
+  assert.equal(tools.length, 28);
   assert.ok(tools.some(({ name }) => name === 'google_health_get_auth_url'));
   const manifest = await client.callTool({ name: 'google_health_agent_manifest', arguments: { response_format: 'json' } });
   for (const removedTool of removedTools) {

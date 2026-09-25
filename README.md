@@ -5,7 +5,7 @@
 </div>
 
 <h3 align="center">
-  Query your own Google Health API data &mdash; Fitbit, Pixel Watch and connected partner sources &mdash; over local OAuth. <strong>Beta</strong>.<br>
+  Query your own Google Health API data and log confirmed meals &mdash; Fitbit, Pixel Watch and connected partner sources &mdash; over local OAuth. <strong>Beta</strong>.<br>
   Everything runs on your own machine &mdash; <strong>your credentials never leave your device</strong>.
 </h3>
 
@@ -19,7 +19,7 @@
 
 ---
 
-**An MCP server that runs locally and hands your AI agent your own Google Health API data — from Fitbit trackers, Pixel Watch and supported partner sources — through OAuth.**
+**A local MCP server that lets your AI agent read your Google Health API data and log meals after your confirmation — through OAuth.**
 
 - **Install in one command** — `npx -y google-health-fitbit-mcp setup`
 - **Run it in** Claude Desktop · Claude Code · Cursor · Windsurf · Hermes · OpenClaw — see [client examples](https://github.com/BerkKilicoglu/google-health-fitbit-mcp/tree/main/examples).
@@ -189,6 +189,12 @@ Account disconnection is outside MCP: no tool can revoke the OAuth grant or dele
 | `google_health_daily_rollup` | `/v4/.../dataPoints:dailyRollUp` — civil-day aggregates |
 | `google_health_rollup` | `/v4/.../dataPoints:rollUp` — physical-time window aggregates |
 
+### Log a meal from a photo
+
+The chat host analyzes the photo and estimates each food's amount and nutrients. Call `google_health_log_nutrition` with `items` (one per food), `eaten_at` (ISO timestamp with timezone), and optional `meal_type`. Each item has `food_name`, `amount_g`, and per-portion `nutrients`: `calories_kcal`, `protein_g`, `carbohydrates_g`, and `fat_g`; optional fields are `fiber_g`, `sugar_g`, `saturated_fat_g`, and `sodium_mg`.
+
+The tool defaults to a local preview with no Google call. Show its food estimates and meal totals to the user. After the user confirms them, call again with the exact same meal, `dry_run=false`, `explicit_user_intent=true`, and the returned `preview_fingerprint`. The live call needs the `nutrition-write` OAuth preset. Each food becomes an anonymous Google Health `nutrition-log` entry; its display name includes the estimated grams. Anonymous entries cannot be edited after creation. The response reports confirmed entries and any pending or unconfirmed entry; check Google Health before retrying those to avoid duplicates.
+
 ### Summaries & wellness context
 
 | Tool | What it does |
@@ -257,7 +263,7 @@ Presets keep OAuth consent easy to reason about — request only what your use c
 | `sleep` | basic + sleep |
 | `heart` | basic + health metrics + **ECG** + **irregular-rhythm notifications** |
 | `full` | all recommended read-only scopes (default) |
-| `nutrition-write` | opt-in nutrition write scope — the only preset with any write capability; no write tool ships yet |
+| `nutrition-write` | read-only profile/settings/nutrition plus opt-in nutrition write scope for `google_health_log_nutrition` |
 
 Advanced users can pass `--scopes` with an explicit space/comma-separated scope list.
 

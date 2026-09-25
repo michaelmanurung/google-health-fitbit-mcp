@@ -8,9 +8,8 @@
 //   - src/types.ts:5-16                → local NutrientMap / MealType (kept here so this repo's
 //                                         src/types.ts is NOT widened)
 //
-// The future log_nutrition WRITE tool calls estimateMeal(...) for free text or
-// nutrientsForGrams(per100g, grams) for a single known food, then hands the NutrientMap to
-// google-v4-nutrition-datapoint.ts (buildNutritionDataPointBody).
+// The photo logging tool accepts the chat host's confirmed per-portion NutrientMap values.
+// These offline estimators remain available for other text-based nutrition workflows.
 //
 // SEAM (optional, future): online resolution via USDA (FDC_API_KEY) / Open Food Facts and the
 // offline TACO table can be added as a lazy-imported sibling module behind a flag. Not needed

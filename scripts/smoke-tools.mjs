@@ -12,7 +12,7 @@ const expectedTools = [
   'google_health_get_auth_url', 'google_health_get_data_point', 'google_health_get_identity',
   'google_health_get_irn_profile', 'google_health_get_profile',
   'google_health_get_settings', 'google_health_list_data_points', 'google_health_list_data_types',
-  'google_health_list_paired_devices', 'google_health_onboarding',
+  'google_health_list_paired_devices', 'google_health_log_nutrition', 'google_health_onboarding',
   'google_health_privacy_audit', 'google_health_profile_get', 'google_health_profile_update', 'google_health_quickstart',
   'google_health_reconcile_data_points', 'google_health_rollup',
   'google_health_weekly_summary', 'google_health_wellness_context'
@@ -41,6 +41,19 @@ try {
   const tools = await client.listTools();
   const toolNames = tools.tools.map((tool) => tool.name).sort();
   assert.deepEqual(toolNames, expectedTools.sort());
+
+  const meal = {
+    items: [{ food_name: 'banana', amount_g: 100, nutrients: { calories_kcal: 89, protein_g: 1.09, carbohydrates_g: 22.84, fat_g: 0.33 } }],
+    meal_type: 'snack', eaten_at: '2026-06-16T19:00:00+07:00', response_format: 'json'
+  };
+  const preview = await client.callTool({ name: 'google_health_log_nutrition', arguments: meal });
+  assert.equal(preview.structuredContent?.status, 'preview');
+  assert.equal(preview.structuredContent?.data_point_bodies?.[0]?.nutritionLog?.foodDisplayName, 'banana (100 g)');
+  const refused = await client.callTool({ name: 'google_health_log_nutrition', arguments: {
+    ...meal, dry_run: false, explicit_user_intent: true,
+    preview_fingerprint: preview.structuredContent.preview_fingerprint
+  } });
+  assert.equal(refused.structuredContent?.error, 'WRITE_SCOPE_MISSING');
 
   const resources = await client.listResources();
   const resourceUris = resources.resources.map((resource) => resource.uri).sort();
